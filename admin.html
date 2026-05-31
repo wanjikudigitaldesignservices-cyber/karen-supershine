@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Karen Supershine Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>*{margin:0;padding:0;box-sizing:border-box}:root{--primary:#1B3A2D;--accent:#C9A84C;--bg:#f1f5f9;--white:#fff;--red:#ef4444;--green:#10b981;--blue:#3b82f6}body{font-family:'Lato',sans-serif;background:var(--bg);color:#1a1a1a}h1,h2,h3{font-family:'Playfair Display',serif}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--primary)}.login-box{background:white;padding:48px;border-radius:16px;max-width:400px;width:100%;text-align:center}.login-box h2{color:var(--primary);margin-bottom:24px}.login-box input{width:100%;padding:14px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;font-size:1rem}.login-box button{width:100%;padding:14px;background:var(--accent);color:var(--primary);border:none;border-radius:8px;font-weight:700;font-size:1rem;cursor:pointer}
+.dashboard{display:none}.dash-head{background:var(--primary);color:white;padding:20px 32px;display:flex;justify-content:space-between;align-items:center}.dash-head h1{font-size:1.4rem}.dash-head button,.dash-head a{padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-size:0.9rem;text-decoration:none;color:white;background:rgba(255,255,255,0.1)}.btn-exp{background:var(--accent)!important;color:var(--primary)!important}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:24px 32px}.stat-card{background:white;padding:24px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}.stat-label{font-size:0.85rem;color:#6b7280;text-transform:uppercase}.stat-val{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:700;margin-top:4px}
+.table-wrap{padding:0 32px 32px;overflow-x:auto}table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)}th{background:var(--primary);color:white;padding:14px 16px;text-align:left;font-size:0.85rem;text-transform:uppercase}td{padding:12px 16px;border-bottom:1px solid #f1f5f9;font-size:0.9rem}tr:hover td{background:#f8fafc}
+select.st{padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem}.del{background:none;border:none;color:var(--red);cursor:pointer;font-size:1.1rem}
+@media(max-width:768px){.stats{grid-template-columns:1fr 1fr}.dash-head{flex-direction:column;gap:12px}}</style></head>
+<body>
+<div class="login" id="loginScreen"><div class="login-box"><h2>Karen Supershine Admin</h2><input type="text" id="user" placeholder="Username" value="admin"><input type="password" id="pass" placeholder="Password"><button onclick="login()">Sign In</button></div></div>
+<div class="dashboard" id="dashboard">
+<div class="dash-head"><h1>📊 Karen Supershine Dashboard</h1><div><button class="btn-exp" onclick="exportCSV()">📥 Export CSV</button> <a href="index.html">← Site</a> <button onclick="logout()">Logout</button></div></div>
+<div class="stats"><div class="stat-card"><div class="stat-label">Total</div><div class="stat-val" id="sT" style="color:var(--blue)">0</div></div><div class="stat-card"><div class="stat-label">New</div><div class="stat-val" id="sN" style="color:var(--accent)">0</div></div><div class="stat-card"><div class="stat-label">Confirmed</div><div class="stat-val" id="sC" style="color:var(--green)">0</div></div><div class="stat-card"><div class="stat-label">Completed</div><div class="stat-val" id="sD" style="color:#6b7280">0</div></div></div>
+<div class="table-wrap"><table><thead><tr><th>Date</th><th>Name</th><th>Phone</th><th>Car</th><th>Package</th><th>Pref Date</th><th>Status</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div>
+</div>
+<script>
+const KEY='ks_bookings';
+if(sessionStorage.getItem('ks_admin')==='true')showDash();
+function login(){if(document.getElementById('user').value==='admin'&&document.getElementById('pass').value==='admin123'){sessionStorage.setItem('ks_admin','true');showDash();}else alert('Invalid credentials')}
+function logout(){sessionStorage.removeItem('ks_admin');location.reload()}
+function showDash(){document.getElementById('loginScreen').style.display='none';document.getElementById('dashboard').style.display='block';render()}
+function getData(){return JSON.parse(localStorage.getItem(KEY)||'[]').sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt))}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d))}
+function render(){const d=getData();document.getElementById('sT').textContent=d.length;document.getElementById('sN').textContent=d.filter(x=>x.status==='New').length;document.getElementById('sC').textContent=d.filter(x=>x.status==='Confirmed').length;document.getElementById('sD').textContent=d.filter(x=>x.status==='Completed').length;
+document.getElementById('tbody').innerHTML=d.map(i=>`<tr><td>${new Date(i.submittedAt).toLocaleDateString('en-GB')}</td><td><b>${i.name||'—'}</b></td><td>${i.phone||'—'}</td><td>${i.car||'—'}</td><td>${i.package||'—'}</td><td>${i.date||'—'}</td><td><select class="st" onchange="upd(${i.id},this.value)">${['New','Confirmed','Completed'].map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}</select></td><td><button class="del" onclick="del(${i.id})">🗑</button></td></tr>`).join('')}
+function upd(id,s){const d=getData();const i=d.find(x=>x.id===id);if(i){i.status=s;save(d);render()}}
+function del(id){if(!confirm('Delete?'))return;save(getData().filter(x=>x.id!==id));render()}
+function exportCSV(){const d=getData();if(!d.length)return alert('No data');const h=['Date','Name','Phone','Car','Package','Pref Date','Status'];const r=d.map(i=>[new Date(i.submittedAt).toLocaleDateString(),i.name,i.phone,i.car,i.package,i.date,i.status]);const c=[h,...r].map(r=>r.map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');const b=new Blob([c],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='karen_supershine_bookings.csv';a.click()}
+document.getElementById('pass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+</script></body></html>
